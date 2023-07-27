@@ -1,0 +1,70 @@
+from pyamaze import maze,agent
+
+#Maze+Agent
+m=maze(9,9)
+m.CreateMaze(5,5,loopPercent=10)
+a=agent(m,shape='arrow',footprints=True)
+
+#Function to generate floodmap
+def floodmap(st,ed):
+    queue=[ed]
+    visited=[ed]
+    floodmap={ed:0}
+    
+    i=1
+    while len(queue)>0:
+        (x,y)=queue.pop(0)
+
+        if (x,y)==st:
+            floodmap[(x,y)]=i
+            break
+        
+        mover={'E':0,'W':0,'N':-1,'S':1}
+        movec={'E':1,'W':-1,'N':0,'S':0}
+        for d in 'EWNS':
+            nx=x+mover[d]
+            ny=y+movec[d]
+    
+            if m.maze_map[(x,y)][d]==True and (nx,ny) not in visited:
+                queue.append((nx,ny))
+                visited.append((nx,ny))
+                floodmap[(nx,ny)]=i
+      
+        i=i+1
+    return floodmap
+
+#Function to find path from the floodmap
+def floodfill(st,ed):
+
+    flood_map=floodmap(st,ed)
+    
+    #To make a list of path coordinates from the floodmap
+    ff=[st]
+    (x,y)=st
+    while (x,y) != ed:
+        mover={'E':0,'W':0,'N':-1,'S':1}
+        movec={'E':1,'W':-1,'N':0,'S':0}
+        for d in 'EWNS':
+            nx=x+mover[d]
+            ny=y+movec[d]
+
+            if m.maze_map[(x,y)][d]==True and (nx,ny) in flood_map:
+                if flood_map[((nx,ny))]<flood_map[(x,y)]:
+                    ff.append((nx,ny))
+        
+        (x,y)=ff[len(ff)-1]
+    
+    #To convert this list into a path
+    floodfill_path={}
+    for i in range((len(ff)-1),0,-1):
+        floodfill_path[ff[i-1]]=ff[i]
+
+    return floodfill_path
+
+#To trace path
+st=(9,9)
+ed=(5,5)
+
+path=floodfill(st,ed)
+m.tracePath({a:path})
+m.run()
